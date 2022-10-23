@@ -5,11 +5,11 @@ import (
 )
 
 type TelemetryHTTPRouter struct {
-	Handler TelemetryHTTPHandlerContract
 	Router  *echo.Echo
+	Handler TelemetryHTTPHandlerContract
 }
 
-func NewTelemetryHTTPRouter(handler TelemetryHTTPHandlerContract, router *echo.Echo) *TelemetryHTTPRouter {
+func NewTelemetryHTTPRouter(router *echo.Echo, handler TelemetryHTTPHandlerContract) *TelemetryHTTPRouter {
 	return &TelemetryHTTPRouter{Handler: handler, Router: router}
 }
 

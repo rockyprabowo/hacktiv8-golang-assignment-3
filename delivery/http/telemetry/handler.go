@@ -15,7 +15,7 @@ func NewTelemetryHTTPHandler(useCases *telemetry_use_cases.TelemetryUseCases) *T
 }
 
 func (h TelemetryHTTPHandler) Get(c echo.Context) (err error) {
-	data := h.UseCases.Queries.GetTelemetry()
+	data := h.UseCases.Queries.GetTelemetry(c.Request().Context())
 
 	jsonResponse := NewTelemetryResponse(data)
 
