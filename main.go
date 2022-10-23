@@ -1,90 +1,68 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
+	"fmt"
+	"github.com/labstack/echo/v4"
 	"log"
-	"math/rand"
 	"net/http"
+	"os"
+	"os/signal"
+	"rocky.my.id/git/h8-assignment-3/application/telemetry"
+	"rocky.my.id/git/h8-assignment-3/application/telemetry/generators/random_data_generator"
+	"rocky.my.id/git/h8-assignment-3/application/telemetry/queries/with_random_data"
+	"rocky.my.id/git/h8-assignment-3/delivery/http/telemetry"
+	"syscall"
 	"time"
 )
 
-type Telemetry struct {
-	Water int `json:"water"`
-	Wind  int `json:"wind"`
-}
+const (
+	defaultRefreshDuration = 15 * time.Second
+	defaultServeAddress    = "localhost:8080"
+)
 
-type TelemetryResponse struct {
-	Status Telemetry `json:"status"`
-}
+var (
+	serveAddress    string
+	refreshDuration time.Duration
+	debug           bool
+	ctx, stop       = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+)
 
 func main() {
+	var e = echo.New()
+	e.Server = &http.Server{
+		Addr:         serveAddress,
+		Handler:      e,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
 	var (
-		telemetry    Telemetry
-		serveAddress = "localhost:8080"
-		timeout      = 15 * time.Second
-		mux          = http.NewServeMux()
+		telemetryUseCases = &telemetry_use_cases.TelemetryUseCases{
+			Queries: telemetry_query_with_random.NewTelemetryRandomQueries(
+				telemetry_random_data_generator.NewTelemetryRandomDataGenerator(ctx, refreshDuration),
+			),
+		}
 	)
 
-	rand.Seed(time.Now().UnixNano())
+	telemetry_delivery_http.SetupDefault(e, telemetryUseCases)
 
-	go TelemetryDataFetcher(&telemetry, timeout)
-
-	mux.HandleFunc("/api/telemetry", TelemetryDataHandler(&telemetry))
-
-	log.Println("Listening and serving on " + serveAddress)
-	err := http.ListenAndServe(serveAddress, mux)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func TelemetryDataGenerator(c chan Telemetry, timeout time.Duration) {
-	for {
-		c <- Telemetry{
-			Water: rand.Intn(100),
-			Wind:  rand.Intn(100),
+	go func() {
+		if err := e.Start(serveAddress); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Server forced to shutdown: ", err)
 		}
-		time.Sleep(timeout)
+	}()
+
+	<-time.After(1 * time.Second)
+	fmt.Printf("Refresing telemetry data every %s\n", refreshDuration.String())
+
+	<-ctx.Done()
+	stop()
+	log.Println("Shutting down gracefully, press Ctrl+C again to force")
+
+	if err := e.Shutdown(context.Background()); err != nil {
+		log.Fatal("Server forced to shutdown: ", err)
 	}
-}
 
-func TelemetryDataFetcher(currentData *Telemetry, timeout time.Duration) {
-	c := make(chan Telemetry)
-
-	go TelemetryDataGenerator(c, timeout)
-	for {
-		*currentData = <-c
-		log.Printf("new telemetry data recieved: %+v", currentData)
-	}
-}
-
-func TelemetryDataHandler(telemetry *Telemetry) func(writer http.ResponseWriter, request *http.Request) {
-	return func(writer http.ResponseWriter, request *http.Request) {
-		response := TelemetryResponse{
-			Status: *telemetry,
-		}
-
-		jsonResponse, err := json.Marshal(response)
-		if err != nil {
-			writeErrorResponse(writer, err)
-			return
-		}
-
-		writer.Header().Set("Content-Type", "application/json")
-		_, err = writer.Write(jsonResponse)
-		if err != nil {
-			writeErrorResponse(writer, err)
-			return
-		}
-	}
-}
-
-func writeErrorResponse(writer http.ResponseWriter, err error) {
-	code := http.StatusInternalServerError
-	errorResponse, _ := json.Marshal(map[string]any{
-		"code":  code,
-		"error": err.Error(),
-	})
-	writer.WriteHeader(code)
-	_, _ = writer.Write(errorResponse)
+	log.Println("Server has been shutdown.")
 }
