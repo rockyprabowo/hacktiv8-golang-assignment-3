@@ -1,13 +1,13 @@
 package telemetry_use_cases
 
-import "rocky.my.id/git/h8-assignment-3/application/telemetry/contracts"
+import contracts "rocky.my.id/git/h8-assignment-3/application/telemetry/contracts"
 
 type TelemetryUseCases struct {
-	Queries  telemetry_contracts.TelemetryQueriesContract
+	Queries  contracts.TelemetryQueriesContract
 	Commands interface{}
 }
 
 // noinspection GoUnusedExportedFunction
-func NewTelemetryUseCases(queries telemetry_contracts.TelemetryQueriesContract) *TelemetryUseCases {
+func NewTelemetryUseCases(queries contracts.TelemetryQueriesContract) *TelemetryUseCases {
 	return &TelemetryUseCases{Queries: queries}
 }

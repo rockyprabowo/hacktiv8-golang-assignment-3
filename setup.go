@@ -14,7 +14,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 
 	flag.StringVar(&serveAddress, "listen", defaultServeAddress, "Listen address")
-	flag.DurationVar(&refreshDuration, "refresh-duration", defaultRefreshDuration, "refreshDuration duration in hms format, example: 15s for 15 seconds")
+	flag.DurationVar(&refreshDuration, "refresh-duration", defaultRefreshDuration, "Refresh duration in hms format, example: 15s for 15 seconds")
 	flag.BoolVar(&debug, "debug", false, "Debug mode")
 	flag.Parse()
 

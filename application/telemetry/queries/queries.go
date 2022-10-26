@@ -1,16 +1,15 @@
 package telemetry_queries
 
 import (
-	"rocky.my.id/git/h8-assignment-3/application/telemetry/contracts"
+	contracts "rocky.my.id/git/h8-assignment-3/application/telemetry/contracts"
 )
 
 type TelemetryQueries struct {
-	Repository telemetry_contracts.TelemetryRepositoryContract
+	Repository contracts.TelemetryRepositoryContract
 }
 
-func NewTelemetryQueries(repository telemetry_contracts.TelemetryRepositoryContract) *TelemetryQueries {
-	instance := &TelemetryQueries{
+func NewTelemetryQueries(repository contracts.TelemetryRepositoryContract) *TelemetryQueries {
+	return &TelemetryQueries{
 		Repository: repository,
 	}
-	return instance
 }

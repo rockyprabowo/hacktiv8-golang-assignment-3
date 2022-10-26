@@ -2,15 +2,17 @@ package telemetry_repository_random_data
 
 import (
 	"context"
-	"rocky.my.id/git/h8-assignment-3/application/telemetry/contracts"
+
+	contracts "rocky.my.id/git/h8-assignment-3/application/telemetry/contracts"
+	vm "rocky.my.id/git/h8-assignment-3/application/telemetry/view_models"
 	"rocky.my.id/git/h8-assignment-3/domain/entities"
 )
 
 type TelemetryRepository struct {
-	Generator telemetry_contracts.TelemetryDataGeneratorContract
+	Generator contracts.TelemetryDataGeneratorContract
 }
 
-func NewTelemetryRepository(generator telemetry_contracts.TelemetryDataGeneratorContract) *TelemetryRepository {
+func NewTelemetryRepository(generator contracts.TelemetryDataGeneratorContract) *TelemetryRepository {
 	instance := &TelemetryRepository{Generator: generator}
 	instance.Generator.Start()
 	return instance
@@ -18,4 +20,12 @@ func NewTelemetryRepository(generator telemetry_contracts.TelemetryDataGenerator
 
 func (t TelemetryRepository) Get(_ context.Context) *entities.Telemetry {
 	return t.Generator.Data()
+}
+
+func (t TelemetryRepository) Config(_ context.Context) *vm.TelemetryConfigVM {
+	interval := t.Generator.Interval()
+	return &vm.TelemetryConfigVM{
+		Interval:   interval.String(),
+		IntervalMs: interval.Milliseconds(),
+	}
 }

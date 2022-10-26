@@ -3,19 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"rocky.my.id/git/h8-assignment-3/application/telemetry"
-	"rocky.my.id/git/h8-assignment-3/application/telemetry/queries"
-	"rocky.my.id/git/h8-assignment-3/delivery/http/telemetry"
-	"rocky.my.id/git/h8-assignment-3/infrastructure/telemetry/generators/random_data_generator"
-	"rocky.my.id/git/h8-assignment-3/infrastructure/telemetry/repositories/with_random_data"
 	"syscall"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	telemetryUseCases "rocky.my.id/git/h8-assignment-3/application/telemetry"
+	telemetryQueries "rocky.my.id/git/h8-assignment-3/application/telemetry/queries"
+	telemetryDeliveryHttp "rocky.my.id/git/h8-assignment-3/delivery/http/telemetry"
+	telemetryRandomDataGenerator "rocky.my.id/git/h8-assignment-3/infrastructure/telemetry/generators/random_data_generator"
+	telemetryRepositoryRandomData "rocky.my.id/git/h8-assignment-3/infrastructure/telemetry/repositories/with_random_data"
 )
 
 const (
@@ -28,11 +30,14 @@ var (
 	baseURL         string
 	refreshDuration time.Duration
 	debug           bool
-	ctx, stop       = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 )
 
 func main() {
-	var engine = echo.New()
+	var (
+		engine    = echo.New()
+		ctx, stop = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	)
+
 	engine.Server = &http.Server{
 		Addr:         serveAddress,
 		Handler:      engine,
@@ -44,20 +49,23 @@ func main() {
 	}
 
 	var (
-		telemetryGenerator  = telemetry_random_data_generator.NewTelemetryRandomDataGenerator(ctx, refreshDuration)
-		telemetryRepository = telemetry_repository_random_data.NewTelemetryRepository(telemetryGenerator)
-		telemetryUseCases   = &telemetry_use_cases.TelemetryUseCases{
-			Queries: telemetry_queries.NewTelemetryQueries(
+		telemetryGenerator  = telemetryRandomDataGenerator.NewTelemetryRandomDataGenerator(ctx, refreshDuration)
+		telemetryRepository = telemetryRepositoryRandomData.NewTelemetryRepository(telemetryGenerator)
+		telemetryUseCases   = &telemetryUseCases.TelemetryUseCases{
+			Queries: telemetryQueries.NewTelemetryQueries(
 				telemetryRepository,
 			),
 		}
-		telemetryDeliveryDeps = telemetry_delivery_http.TelemetryHTTPDeliveryDependencies{
+		telemetryDeliveryDeps = telemetryDeliveryHttp.TelemetryHTTPDeliveryDependencies{
 			UseCases: telemetryUseCases,
 			Engine:   engine,
 		}
 	)
 
-	telemetry_delivery_http.Setup(telemetryDeliveryDeps)
+	engine.Use(middleware.Recover())
+	setupCORS(engine)
+
+	telemetryDeliveryHttp.Setup(telemetryDeliveryDeps)
 
 	go func() {
 		if err := engine.Start(serveAddress); err != nil && err != http.ErrServerClosed {
@@ -73,8 +81,12 @@ func main() {
 	log.Println("Shutting down gracefully, press Ctrl+C again to force")
 	stop()
 
-	if err := engine.Shutdown(context.Background()); err != nil {
-		log.Fatal("Server forced to shutdown: ", err)
+	{
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := engine.Shutdown(shutdownCtx); err != nil {
+			log.Fatal("Server forced to shutdown: ", err)
+		}
 	}
 
 	log.Println("Server has been shutdown.")

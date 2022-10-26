@@ -6,18 +6,18 @@ import (
 	"math/rand"
 	"time"
 
-	. "rocky.my.id/git/h8-assignment-3/domain/entities"
+	"rocky.my.id/git/h8-assignment-3/domain/entities"
 )
 
 type TelemetryRandomDataGenerator struct {
-	telemetry       *Telemetry
+	telemetry       *entities.Telemetry
 	context         context.Context
 	refreshDuration time.Duration
 }
 
 func NewTelemetryRandomDataGenerator(ctx context.Context, refreshDuration time.Duration) *TelemetryRandomDataGenerator {
 	instance := &TelemetryRandomDataGenerator{
-		telemetry:       &Telemetry{},
+		telemetry:       &entities.Telemetry{},
 		context:         ctx,
 		refreshDuration: refreshDuration,
 	}
@@ -28,7 +28,7 @@ func (g TelemetryRandomDataGenerator) GeneratorFunc() {
 	ticker := time.NewTicker(g.refreshDuration)
 	log.Println("TelemetryRandomDataGenerator started.")
 	for {
-		*g.telemetry = Telemetry{
+		*g.telemetry = entities.Telemetry{
 			Water: rand.Intn(100),
 			Wind:  rand.Intn(100),
 		}
@@ -44,10 +44,14 @@ func (g TelemetryRandomDataGenerator) GeneratorFunc() {
 	}
 }
 
-func (g TelemetryRandomDataGenerator) Data() *Telemetry {
+func (g TelemetryRandomDataGenerator) Data() *entities.Telemetry {
 	return g.telemetry
 }
 
 func (g TelemetryRandomDataGenerator) Start() {
 	go g.GeneratorFunc()
+}
+
+func (g TelemetryRandomDataGenerator) Interval() time.Duration {
+	return g.refreshDuration
 }

@@ -14,8 +14,10 @@ func NewTelemetryHTTPRouter(router *echo.Echo, handler TelemetryHTTPHandlerContr
 }
 
 func (routes *TelemetryHTTPRouter) Setup() {
+	routes.Router.StaticFS("/", getFrontendAssets())
 	routeGroup := routes.Router.Group("/api/v1/telemetry")
 	{
 		routeGroup.GET("", routes.Handler.Get)
+		routeGroup.GET("/config", routes.Handler.GetConfig)
 	}
 }
