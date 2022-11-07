@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,6 +20,7 @@ import (
 )
 
 const (
+	defaultMaxRandomInt    = 100
 	defaultRefreshDuration = 15 * time.Second
 	defaultServeAddress    = "localhost:8080"
 )
@@ -29,6 +29,7 @@ var (
 	serveAddress    string
 	baseURL         string
 	refreshDuration time.Duration
+	maxRandomInt    int
 	debug           bool
 )
 
@@ -39,25 +40,24 @@ func main() {
 	)
 
 	engine.Server = &http.Server{
-		Addr:         serveAddress,
-		Handler:      engine,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		BaseContext: func(_ net.Listener) context.Context {
-			return ctx
-		},
+		Addr:              serveAddress,
+		Handler:           engine,
+		ReadTimeout:       5 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       30 * time.Second,
+		ReadHeaderTimeout: 2 * time.Second,
 	}
 
 	var (
-		telemetryGenerator  = telemetryRandomDataGenerator.NewTelemetryRandomDataGenerator(ctx, refreshDuration)
-		telemetryRepository = telemetryRepositoryRandomData.NewTelemetryRepository(telemetryGenerator)
-		telemetryUseCases   = &telemetryUseCases.TelemetryUseCases{
+		generator  = telemetryRandomDataGenerator.NewTelemetryRandomDataGenerator(ctx, refreshDuration, maxRandomInt)
+		repository = telemetryRepositoryRandomData.NewTelemetryRepository(generator)
+		useCases   = &telemetryUseCases.TelemetryUseCases{
 			Queries: telemetryQueries.NewTelemetryQueries(
-				telemetryRepository,
+				repository,
 			),
 		}
-		telemetryDeliveryDeps = telemetryDeliveryHttp.TelemetryHTTPDeliveryDependencies{
-			UseCases: telemetryUseCases,
+		deliveryDeps = telemetryDeliveryHttp.TelemetryHTTPDeliveryDependencies{
+			UseCases: useCases,
 			Engine:   engine,
 		}
 	)
@@ -65,7 +65,7 @@ func main() {
 	engine.Use(middleware.Recover())
 	setupCORS(engine)
 
-	telemetryDeliveryHttp.Setup(telemetryDeliveryDeps)
+	telemetryDeliveryHttp.Setup(deliveryDeps)
 
 	go func() {
 		if err := engine.Start(serveAddress); err != nil && err != http.ErrServerClosed {

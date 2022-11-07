@@ -27,5 +27,15 @@ func (t TelemetryRepository) Config(_ context.Context) *vm.TelemetryConfigVM {
 	return &vm.TelemetryConfigVM{
 		Interval:   interval.String(),
 		IntervalMs: interval.Milliseconds(),
+		WaterStates: map[string]string{
+			"safe":    "<= 5",
+			"warning": ">=<= 6 8",
+			"danger":  "> 8",
+		},
+		WindStates: map[string]string{
+			"safe":    "<= 6",
+			"warning": ">=<= 7 15",
+			"danger":  "> 15",
+		},
 	}
 }

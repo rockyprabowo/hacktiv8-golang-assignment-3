@@ -13,13 +13,15 @@ type TelemetryRandomDataGenerator struct {
 	telemetry       *entities.Telemetry
 	context         context.Context
 	refreshDuration time.Duration
+	maxRandomInt    int
 }
 
-func NewTelemetryRandomDataGenerator(ctx context.Context, refreshDuration time.Duration) *TelemetryRandomDataGenerator {
+func NewTelemetryRandomDataGenerator(ctx context.Context, refreshDuration time.Duration, maxRandomInt int) *TelemetryRandomDataGenerator {
 	instance := &TelemetryRandomDataGenerator{
 		telemetry:       &entities.Telemetry{},
 		context:         ctx,
 		refreshDuration: refreshDuration,
+		maxRandomInt:    maxRandomInt,
 	}
 	return instance
 }
@@ -29,8 +31,8 @@ func (g TelemetryRandomDataGenerator) GeneratorFunc() {
 	log.Println("TelemetryRandomDataGenerator started.")
 	for {
 		*g.telemetry = entities.Telemetry{
-			Water: rand.Intn(100),
-			Wind:  rand.Intn(100),
+			Water: rand.Intn(g.maxRandomInt),
+			Wind:  rand.Intn(g.maxRandomInt),
 		}
 		log.Printf("TelemetryRandomDataGenerator: new telemetry data recieved: %+v", *g.telemetry)
 

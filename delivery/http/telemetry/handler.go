@@ -1,9 +1,8 @@
 package telemetry_delivery_http
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo/v4"
+	"net/http"
 	telemetryUseCases "rocky.my.id/git/h8-assignment-3/application/telemetry"
 )
 
@@ -20,21 +19,11 @@ func (h TelemetryHTTPHandler) Get(c echo.Context) (err error) {
 
 	jsonResponse := NewTelemetryResponse(data)
 
-	err = c.JSON(http.StatusOK, jsonResponse)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	return
+	return c.JSON(http.StatusOK, jsonResponse)
 }
 
 func (h TelemetryHTTPHandler) GetConfig(c echo.Context) (err error) {
 	data := h.UseCases.Queries.GetTelemetryConfig(c.Request().Context())
 
-	err = c.JSON(http.StatusOK, data)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	return
+	return c.JSON(http.StatusOK, data)
 }

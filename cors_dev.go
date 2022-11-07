@@ -14,7 +14,7 @@ import (
 
 func allowOriginFunc(origin string) (bool, error) {
 	// TODO: Only allow localhost with optional port for now
-	return regexp.MatchString(`^https?://(?:localhost|127(?:\.{1}\d{1,3}){3})(?::\d+)?$`, origin)
+	return regexp.MatchString(`^https?://(?:localhost|127(?:\.\d{1,3}){3})(?::\d+)?$`, origin)
 }
 
 func setupCORS(engine *echo.Echo) {
