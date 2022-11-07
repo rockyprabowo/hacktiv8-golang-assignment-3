@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body {
+    @apply mx-auto bg-gray-50 text-gray-900
+}
+
+h1 {
+    @apply font-semibold text-2xl mb-3
+}
+
+ul {
+    @apply font-medium list-disc ml-4
+}
+
+ul li {
+    @apply mb-1
+}
+
+a {
+    @apply text-blue-600
+}

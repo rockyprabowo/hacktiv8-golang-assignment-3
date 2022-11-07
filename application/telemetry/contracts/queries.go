@@ -1,9 +1,12 @@
 package telemetry_contracts
 
 import (
-	"rocky.my.id/git/h8-assignment-3/application/telemetry/view_models"
+	"context"
+
+	vm "rocky.my.id/git/h8-assignment-3/application/telemetry/view_models"
 )
 
 type TelemetryQueriesContract interface {
-	GetTelemetry() telemetry_view_models.TelemetryVM
+	GetTelemetry(ctx context.Context) vm.TelemetryVM
+	GetTelemetryConfig(ctx context.Context) vm.TelemetryConfigVM
 }

@@ -5,17 +5,19 @@ import (
 )
 
 type TelemetryHTTPRouter struct {
-	Handler TelemetryHTTPHandlerContract
 	Router  *echo.Echo
+	Handler TelemetryHTTPHandlerContract
 }
 
-func NewTelemetryHTTPRouter(handler TelemetryHTTPHandlerContract, router *echo.Echo) *TelemetryHTTPRouter {
+func NewTelemetryHTTPRouter(router *echo.Echo, handler TelemetryHTTPHandlerContract) *TelemetryHTTPRouter {
 	return &TelemetryHTTPRouter{Handler: handler, Router: router}
 }
 
 func (routes *TelemetryHTTPRouter) Setup() {
+	routes.Router.StaticFS("/", getFrontendAssets())
 	routeGroup := routes.Router.Group("/api/v1/telemetry")
 	{
 		routeGroup.GET("", routes.Handler.Get)
+		routeGroup.GET("/config", routes.Handler.GetConfig)
 	}
 }
