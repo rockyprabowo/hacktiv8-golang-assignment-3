@@ -17,7 +17,7 @@ function BuildTelemetryBackgroundCSS(value: number | undefined, stateMapper: Val
 function BuildComparatorFunc(comparator: string): ValueStateFunc {
     const comparatorParam = comparator.split(' ')
     if (comparatorParam.length < 2 || comparatorParam.length > 3) {
-        throw Error('Invalid comparison parameter, expected at least two or at most three paramater')
+        throw new Error('Invalid comparison parameter, expected at least two or at most three parameter')
     }
     if (comparatorParam.length === 2) {
         const comparatorLead = comparatorParam[0]
@@ -52,7 +52,7 @@ function BuildComparatorFunc(comparator: string): ValueStateFunc {
                 return (value: number) => value <= comparatorValueLeft && value >= comparatorValueRight
         }
     }
-    throw Error(`Unparsable comparator: ${comparator}`)
+    throw new Error(`Couldn't parse comparator: ${comparator}`)
 }
 
 function StateFuncBuilder(states: States): ValueStateMapperFunc {
