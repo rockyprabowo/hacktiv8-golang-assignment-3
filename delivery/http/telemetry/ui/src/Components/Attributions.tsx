@@ -1,14 +1,14 @@
-import {Dialog, Transition} from '@headlessui/react'
-import {Fragment, useState} from 'react'
+import { Dialog, Transition } from '@headlessui/react'
+import { Fragment, useState } from 'react'
 
-export default function MyModal(): JSX.Element {
+export default function MyModal (): JSX.Element {
   const [isOpen, setIsOpen] = useState(false)
 
-  function closeModal(): void {
+  function closeModal (): void {
     setIsOpen(false)
   }
 
-  function openModal(): void {
+  function openModal (): void {
     setIsOpen(true)
   }
 
